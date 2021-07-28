@@ -22,6 +22,7 @@ import static com.android.customization.model.ResourceConstants.CONFIG_CORNERRAD
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ANDROID_THEME;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_UISTYLE_ANDROID;
 
+import com.android.internal.util.aospextended.ThemeUtils;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -79,40 +80,22 @@ public class UiStyleOptionsProvider extends ThemeComponentOptionProvider<UiStyle
         Configuration configuration = mContext.getResources().getConfiguration();
         boolean nightMode = (configuration.uiMode & Configuration.UI_MODE_NIGHT_MASK)
                     == Configuration.UI_MODE_NIGHT_YES ? true : false;
-        addDefault();
+        //addDefault();
 
-        for (String overlayPackage : mOverlayPackages) {
+        ThemeUtils mThemeUtils = new ThemeUtils(mContext);
+
+        List<String> themeNames = mThemeUtils.getThemePackages();
+        List<String> mLabels = mThemeUtils.getThemeLabels();
+        List<Integer> mColors = mThemeUtils.getThemeColors();
+
+        for (String overlayPackage : themeNames) {
             UiStyleOption option = addOrUpdateOption(optionsByPrefix, overlayPackage,
                     OVERLAY_CATEGORY_UISTYLE_ANDROID);
-            try {
-                Resources overlayRes = getOverlayResources(overlayPackage);
-                if (getStyleLevel(overlayRes, overlayPackage) > UI_STYLE_UNSUPPORTED) {
-                    int lightColor = getSafeLightColor(overlayRes, overlayPackage);
-                    int darkColor = getSafeDarkColor(overlayRes, overlayPackage);
-                    int cornerRadius = loadCornerRadius(overlayPackage);
-                    PackageManager pm = mContext.getPackageManager();
-                    
-                    StringBuilder uiLabel = new StringBuilder(
-                          pm.getApplicationInfo(overlayPackage, 0).loadLabel(pm).toString());
-                    if (getStyleLevel(overlayRes, overlayPackage) == UI_STYLE_LIGHT_ONLY) {
-                        uiLabel.append(" \u00b7 " +
-                            mContext.getResources().getString(R.string.ui_styles_suffix_light_only));
-                    } else if (getStyleLevel(overlayRes, overlayPackage) == UI_STYLE_DARK_ONLY) {
-                        uiLabel.append(" \u00b7 " +
-                            mContext.getResources().getString(R.string.ui_styles_suffix_dark_only));
-                    }
-                    String label = uiLabel.toString();
-
-                    option.addStyleInfo(overlayPackage, label, lightColor, darkColor, accentColor, cornerRadius);
-                    mOptions.add(option);
-                } else {
-                    Log.w(TAG, String.format("The UI style overlay %s is not supported, will skip it",
-                        overlayPackage));
-                }
-            } catch (NameNotFoundException | NotFoundException e) {
-                Log.w(TAG, String.format("Couldn't load UI style overlay %s, will skip it",
-                        overlayPackage), e);
-            }
+                option.addStyleInfo(overlayPackage, mLabels.get(themeNames.indexOf(overlayPackage)),
+                        mColors.get(themeNames.indexOf(overlayPackage)),
+                        mColors.get(themeNames.indexOf(overlayPackage)),
+                        accentColor,  loadCornerRadius("android"));
+                mOptions.add(option);
         }
 
         /**for (UiStyleOption option : optionsByPrefix.values()) {
@@ -124,7 +107,7 @@ public class UiStyleOptionsProvider extends ThemeComponentOptionProvider<UiStyle
 
     private UiStyleOption addOrUpdateOption(Map<String, UiStyleOption> optionsByPrefix,
             String overlayPackage, String category) {
-        String prefix = overlayPackage.substring(0, overlayPackage.lastIndexOf("."));
+        String prefix = overlayPackage;
         UiStyleOption option;
         if (!optionsByPrefix.containsKey(prefix)) {
             option = new UiStyleOption();
@@ -136,6 +119,7 @@ public class UiStyleOptionsProvider extends ThemeComponentOptionProvider<UiStyle
         return option;
     }
 
+/*
     private void addDefault() {
         int lightColor, darkColor;
         UiStyleOption option = new UiStyleOption();
@@ -165,6 +149,7 @@ public class UiStyleOptionsProvider extends ThemeComponentOptionProvider<UiStyle
                 mContext.getString(R.string.default_theme_title), lightColor, darkColor, accentColor, cornerRadius);
         mOptions.add(option);
     }
+*/
 
     private int getSafeLightColor(Resources overlayRes, String overlayPackage) {
         int lightColor;

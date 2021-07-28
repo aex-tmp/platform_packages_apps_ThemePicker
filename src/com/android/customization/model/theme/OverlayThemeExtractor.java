@@ -5,6 +5,7 @@ import static com.android.customization.model.ResourceConstants.CONFIG_CORNERRAD
 import static com.android.customization.model.ResourceConstants.ICONS_FOR_PREVIEW;
 import static com.android.customization.model.ResourceConstants.SETTINGS_PACKAGE;
 import static com.android.customization.model.ResourceConstants.SYSUI_PACKAGE;
+import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_UISTYLE_ANDROID;
 
 import android.content.Context;
 import android.content.om.OverlayInfo;
@@ -81,15 +82,13 @@ class OverlayThemeExtractor {
         }
     }
 
-    void addUiStyleOverlay(Builder builder, String uiStyleOverlayPackage)
+    void addUiStyleOverlay(Builder builder, String uiStyleOverlayPackage, @ColorInt int color)
             throws NameNotFoundException {
         if (!TextUtils.isEmpty(uiStyleOverlayPackage)) {
-            builder.addOverlayPackage(getOverlayCategory(uiStyleOverlayPackage),
+            builder.addOverlayPackage(OVERLAY_CATEGORY_UISTYLE_ANDROID,
                     uiStyleOverlayPackage)
-                    .setBackgroundColorLight(loadColor(ResourceConstants.STYLE_BACKGROUND_COLOR_LIGHT_NAME,
-                            uiStyleOverlayPackage))
-                    .setBackgroundColorDark(loadColor(ResourceConstants.STYLE_BACKGROUND_COLOR_DARK_NAME,
-                            uiStyleOverlayPackage))
+                    .setBackgroundColorLight(color)
+                    .setBackgroundColorDark(color)
                     .setBottomSheetCornerRadius(
                             loadCorners(ResourceConstants.CONFIG_CORNERRADIUS, uiStyleOverlayPackage));
         } else {
@@ -178,7 +177,7 @@ class OverlayThemeExtractor {
                 builder.addIcon(loadIconPreviewDrawable(iconName, packageName, false));
             }
         } catch (NameNotFoundException | NotFoundException e) {
-            Log.w(TAG, "Didn't find overlay icons, will skip preview", e);
+            Log.w(TAG, "Didn't find overlay icons, will skip preview");
         }
     }
 
@@ -205,7 +204,7 @@ class OverlayThemeExtractor {
                 builder.addIcon(loadIconPreviewDrawable(iconName, packageName, true));
             }
         } catch (NameNotFoundException | NotFoundException e) {
-            Log.w(TAG, "Didn't find android package icons, will skip preview", e);
+            Log.w(TAG, "Didn't find android package icons, will skip preview");
         }
     }
 

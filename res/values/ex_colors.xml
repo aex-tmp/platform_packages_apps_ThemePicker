@@ -15,5 +15,12 @@
 -->
 
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <color name="material_grey_600">#FF757575</color>
+    <string name="ui_styles_component_title">Choose UI Style</string>
+    <string name="accent_color_component_title">Choose accent color</string>
+    <string name="preview_name_ui_style">UI Style</string>
+    <string name="preview_name_accent_color">Accent color</string>
+    <string name="no_options_message">No valid UI Styles available</string>
+    <!-- Themes suffix after reading if they're dark or light only friendly -->
+    <string name="ui_styles_suffix_light_only">Light only</string>
+    <string name="ui_styles_suffix_dark_only">Dark only</string>
 </resources>

@@ -21,11 +21,16 @@ import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_SHAPE;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_UISTYLE_ANDROID;
 import static com.android.customization.model.ResourceConstants.PATH_SIZE;
+import static com.android.customization.model.ResourceConstants.STYLE_BACKGROUND_COLOR_LIGHT_NAME;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.res.Resources.NotFoundException;
 import android.content.res.Configuration;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.Typeface;
 import android.graphics.drawable.AdaptiveIconDrawable;
@@ -51,6 +56,8 @@ import com.android.wallpaper.R;
 import com.android.wallpaper.asset.Asset;
 import com.android.wallpaper.asset.BitmapCachingAsset;
 import com.android.wallpaper.model.WallpaperInfo;
+
+import com.android.internal.util.aospextended.ThemeUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,8 +108,9 @@ public class ThemeBundle implements CustomizationOption<ThemeBundle> {
     public void bindThumbnailTile(View view) {
         Resources res = view.getContext().getResources();
 
-        ((TextView) view.findViewById(R.id.theme_option_font)).setTypeface(
-                mPreviewInfo.headlineFontFamily);
+        TextView tv = (TextView) view.findViewById(R.id.theme_option_font);
+        tv.setTypeface(mPreviewInfo.headlineFontFamily);
+        tv.setTextColor(res.getColor(R.color.material_grey_600, null));
         if (mPreviewInfo.shapeDrawable != null) {
             ((ShapeDrawable) mPreviewInfo.shapeDrawable).getPaint().setColor(
                     mPreviewInfo.resolveAccentColor(res));
@@ -111,11 +119,28 @@ public class ThemeBundle implements CustomizationOption<ThemeBundle> {
         }
         if (!mPreviewInfo.icons.isEmpty()) {
             Drawable icon = mPreviewInfo.icons.get(0).getConstantState().newDrawable().mutate();
-            icon.setTint(res.getColor(R.color.icon_thumbnail_color, null));
             ((ImageView) view.findViewById(R.id.theme_option_icon)).setImageDrawable(
                     icon);
         }
-        view.setBackgroundColor(mPreviewInfo.resolveStyleBackgroundColor(res));
+        int color = mPreviewInfo.resolveStyleBackgroundColor(res);
+        if (color == 0 || color == -1) {
+            String pkg = mPackagesByCategory.get(OVERLAY_CATEGORY_UISTYLE_ANDROID);
+            ThemeUtils mThemeUtils = new ThemeUtils(view.getContext());
+            List<String> mPkgs = mThemeUtils.getThemePackages();
+            List<Integer> mColors = mThemeUtils.getThemeColors();
+            if (pkg.equals("com.android.system.theme.light")
+                        || pkg.equals("com.android.system.theme.dark")) {
+                color = mColors.get(mPkgs.indexOf(pkg));
+            } else {
+                try {
+                    Resources overlayRes = view.getContext().getPackageManager()
+                            .getResourcesForApplication(pkg);
+                    color = overlayRes.getColor(overlayRes.getIdentifier(STYLE_BACKGROUND_COLOR_LIGHT_NAME, "color", pkg), null);
+                } catch (NameNotFoundException | NotFoundException e) {
+                }
+            }
+        }
+        view.setBackgroundTintList(ColorStateList.valueOf(color));
         view.setContentDescription(getContentDescription(view.getContext()));
     }
 

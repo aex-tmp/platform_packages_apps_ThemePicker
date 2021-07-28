@@ -15,6 +15,8 @@
  */
 package com.android.customization.model.theme;
 
+import static android.os.UserHandle.USER_SYSTEM;
+
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_COLOR;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_FONT;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ICON_ANDROID;
@@ -35,6 +37,8 @@ import com.android.customization.model.CustomizationManager;
 import com.android.customization.model.ResourceConstants;
 import com.android.customization.model.theme.custom.CustomTheme;
 import com.android.customization.module.ThemesUserEventLogger;
+
+import com.android.internal.util.aospextended.ThemeUtils;
 
 import org.json.JSONObject;
 
@@ -114,6 +118,14 @@ public class ThemeManager implements CustomizationManager<ThemeBundle> {
                     ResourceConstants.getPackagesToOverlay(mActivity));
             mCurrentOverlays.entrySet().removeIf(
                     categoryAndPackage -> !THEME_CATEGORIES.contains(categoryAndPackage.getKey()));
+            if (!mCurrentOverlays.containsKey(OVERLAY_CATEGORY_UISTYLE_ANDROID)) {
+                int theme = Settings.System.getIntForUser(mActivity.getContentResolver(),
+                        Settings.System.SYSTEM_THEME_STYLE, 1, USER_SYSTEM);
+                if (theme == 1) mCurrentOverlays.put(OVERLAY_CATEGORY_UISTYLE_ANDROID,
+                        "com.android.system.theme.light");
+                if (theme == 2) mCurrentOverlays.put(OVERLAY_CATEGORY_UISTYLE_ANDROID,
+                        "com.android.system.theme.dark");
+            }
         }
         return mCurrentOverlays;
     }

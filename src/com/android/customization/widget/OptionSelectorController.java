@@ -74,7 +74,7 @@ public class OptionSelectorController<T extends CustomizationOption<T>> {
     private CustomizationOption mAppliedOption;
 
     public OptionSelectorController(RecyclerView container, List<T> options) {
-        this(container, options, true, true);
+        this(container, options, true, false);
     }
 
     public OptionSelectorController(RecyclerView container, List<T> options,

@@ -23,6 +23,7 @@ import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ICON_LAUNCHER;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ICON_SETTINGS;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ICON_SYSUI;
+import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_ICON_THEMEPICKER;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_SHAPE;
 import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_UISTYLE_ANDROID;
 import static com.android.customization.model.ResourceConstants.SYSUI_PACKAGE;
@@ -45,6 +46,8 @@ import com.android.customization.model.theme.custom.CustomTheme;
 import com.android.customization.module.CustomizationPreferences;
 import com.android.wallpaper.R;
 import com.android.wallpaper.asset.ResourceAsset;
+
+import com.android.internal.util.aospextended.ThemeUtils;
 
 import com.bumptech.glide.request.RequestOptions;
 import com.google.android.apps.wallpaper.asset.ThemeBundleThumbAsset;
@@ -115,9 +118,15 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                 .setTitle(mContext.getString(R.string.custom_theme))
                 .build(mContext));
 
-        addDefaultTheme();
+        //addDefaultTheme();
 
-        String[] themeNames = getItemsFromStub(THEMES_ARRAY);
+        //String[] themeNames = getItemsFromStub(THEMES_ARRAY);
+
+        ThemeUtils mThemeUtils = new ThemeUtils(mContext);
+
+        List<String> themeNames = mThemeUtils.getThemePackages();
+        List<String> mLabels = mThemeUtils.getThemeLabels();
+        List<Integer> mColors = mThemeUtils.getThemeColors();
 
         for (String themeName : themeNames) {
             // Default theme needs special treatment (see #addDefaultTheme())
@@ -125,13 +134,16 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                 continue;
             }
             ThemeBundle.Builder builder = new Builder();
+
+            builder.setTitle(mLabels.get(themeNames.indexOf(themeName)));
+
             try {
-                builder.setTitle(mStubApkResources.getString(
-                        mStubApkResources.getIdentifier(TITLE_PREFIX + themeName,
-                                "string", mStubPackageName)));
-            } catch (NotFoundException e) {
-                Log.d(TAG, "Didn't find title for theme, will use default");
-                builder.setTitle("unknown");
+                String uiStyleOverlayPackage = themeName;
+                mOverlayProvider.addUiStyleOverlay(builder, uiStyleOverlayPackage,
+                        mColors.get(themeNames.indexOf(themeName)));
+            } catch (NameNotFoundException | NotFoundException e) {
+                Log.d(TAG, "Didn't find android UI style overlay for theme, will use system default");
+                mOverlayProvider.addSystemDefaultStyle(builder);
             }
 
             try {
@@ -140,15 +152,6 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
             } catch (NameNotFoundException | NotFoundException e) {
                 Log.d(TAG, "Didn't find shape overlay for theme, will use system default");
                 mOverlayProvider.addSystemDefaultShape(builder);
-            }
-
-            try {
-                String uiStyleOverlayPackage = getOverlayPackage(UISTYLE_ANDROID_PREFIX,
-                    themeName);
-                mOverlayProvider.addUiStyleOverlay(builder, uiStyleOverlayPackage);
-            } catch (NameNotFoundException | NotFoundException e) {
-                Log.d(TAG, "Didn't find android UI style overlay for theme, will use system default");
-                mOverlayProvider.addSystemDefaultStyle(builder);
             }
 
             try {
@@ -174,7 +177,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                 try {
                     icon = mContext.getPackageManager().getApplicationIcon(packageName);
                     ApplicationInfo appInfo = mContext.getPackageManager()
-                            .getApplicationInfo(packageName, /* flag= */ 0);
+                            .getApplicationInfo(packageName, 0);
                     name = mContext.getPackageManager().getApplicationLabel(appInfo);
                 } catch (NameNotFoundException e) {
                     Log.d(TAG, "Couldn't find app " + packageName + ", won't use it for icon shape"
@@ -204,7 +207,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                     "Didn't find SystemUi icons overlay for theme, using system default");
                 mOverlayProvider.addSystemDefaultIcons(builder, SYSUI_PACKAGE, ICONS_FOR_PREVIEW);
             }
-
+/*
             String iconLauncherOverlayPackage = getOverlayPackage(ICON_LAUNCHER_PREFIX,
                     themeName);
             mOverlayProvider.addNoPreviewIconOverlay(builder, iconLauncherOverlayPackage);
@@ -213,7 +216,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                     themeName);
 
             mOverlayProvider.addNoPreviewIconOverlay(builder, iconSettingsOverlayPackage);
-
+*/
             mThemes.add(builder.build(mContext));
         }
 
@@ -225,6 +228,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
      * stub apk, we'll use those, otherwise we'll get the System default values. But we cannot skip
      * the default theme.
      */
+/*
     private void addDefaultTheme() {
         ThemeBundle.Builder builder = new Builder().asDefault();
 
@@ -246,7 +250,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
 
         try {
             String uiStyleOverlayPackage = getOverlayPackage(UISTYLE_ANDROID_PREFIX, DEFAULT_THEME_NAME);
-            mOverlayProvider.addUiStyleOverlay(builder, uiStyleOverlayPackage);
+            mOverlayProvider.addUiStyleOverlay(builder, uiStyleOverlayPackage, 0);
         } catch (NameNotFoundException | NotFoundException e) {
             Log.d(TAG, "Didn't find ui style overlay for default theme, will use system default");
             mOverlayProvider.addSystemDefaultStyle(builder);
@@ -275,7 +279,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
             try {
                 icon = mContext.getPackageManager().getApplicationIcon(packageName);
                 ApplicationInfo appInfo = mContext.getPackageManager()
-                        .getApplicationInfo(packageName, /* flag= */ 0);
+                        .getApplicationInfo(packageName, 0);
                 name = mContext.getPackageManager().getApplicationLabel(appInfo);
             } catch (NameNotFoundException e) {
                 Log.d(TAG, "Couldn't find app " + packageName + ", won't use it for icon shape"
@@ -309,7 +313,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
 
         mThemes.add(builder.build(mContext));
     }
-
+*/
     @Override
     public void storeCustomTheme(CustomTheme theme) {
         if (mThemes == null) {
@@ -448,7 +452,7 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
         mOverlayProvider.addColorOverlay(builder,
                 customPackages.get(OVERLAY_CATEGORY_COLOR));
         mOverlayProvider.addUiStyleOverlay(builder,
-                customPackages.get(OVERLAY_CATEGORY_UISTYLE_ANDROID));
+                customPackages.get(OVERLAY_CATEGORY_UISTYLE_ANDROID), 0);
         mOverlayProvider.addAndroidIconOverlay(builder,
                 customPackages.get(OVERLAY_CATEGORY_ICON_ANDROID));
         mOverlayProvider.addSysUiIconOverlay(builder,
@@ -457,6 +461,8 @@ public class DefaultThemeProvider extends ResourcesApkProvider implements ThemeB
                 customPackages.get(OVERLAY_CATEGORY_ICON_SETTINGS));
         mOverlayProvider.addNoPreviewIconOverlay(builder,
                 customPackages.get(OVERLAY_CATEGORY_ICON_LAUNCHER));
+        mOverlayProvider.addNoPreviewIconOverlay(builder,
+                customPackages.get(OVERLAY_CATEGORY_ICON_THEMEPICKER));
         if (theme.has(THEME_TITLE_FIELD)) {
             builder.setTitle(theme.getString(THEME_TITLE_FIELD));
         }

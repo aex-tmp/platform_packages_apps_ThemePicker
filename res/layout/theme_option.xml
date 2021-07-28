@@ -40,14 +40,15 @@
         android:layout_gravity="center_horizontal"
         android:paddingHorizontal="@dimen/option_tile_padding_horizontal"
         android:paddingVertical="@dimen/option_tile_padding_vertical"
-        android:background="@drawable/option_border">
+        android:background="@drawable/option_border"
+        android:foreground="@drawable/option_border_custom">
         <ImageView
             android:id="@+id/theme_option_icon"
             android:layout_width="@dimen/theme_option_icon_sample_width"
             android:layout_height="@dimen/theme_option_icon_sample_height"
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
-            android:tint="?android:colorForeground"/>
+            android:tint="@color/material_grey_600"/>
         <ImageView
             android:id="@+id/theme_option_shape"
             android:layout_width="@dimen/theme_option_shape_sample_width"

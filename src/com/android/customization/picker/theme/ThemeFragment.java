@@ -17,6 +17,7 @@ package com.android.customization.picker.theme;
 
 import static android.app.Activity.RESULT_OK;
 
+import static com.android.customization.model.ResourceConstants.OVERLAY_CATEGORY_UISTYLE_ANDROID;
 import static com.android.customization.picker.ViewOnlyFullPreviewActivity.SECTION_STYLE;
 import static com.android.customization.picker.theme.ThemeFullPreviewFragment.EXTRA_CAN_APPLY_FROM_FULL_PREVIEW;
 import static com.android.customization.picker.theme.ThemeFullPreviewFragment.EXTRA_THEME_OPTION;
@@ -218,6 +219,12 @@ public class ThemeFragment extends AppbarFragment {
     }
 
     @Override
+    public void onResume() {
+        reloadOptions();
+        super.onResume();
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CustomThemeActivity.REQUEST_CODE_CUSTOM_THEME) {
             if (resultCode == CustomThemeActivity.RESULT_THEME_DELETED) {
@@ -227,14 +234,7 @@ public class ThemeFragment extends AppbarFragment {
                 getActivity().overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
                 getActivity().finish();
             } else {
-                if (mSelectedTheme != null) {
-                    mOptionsController.setSelectedOption(mSelectedTheme);
-                    // Set selected option above will show BottomActionBar,
-                    // hide BottomActionBar for the mis-trigger.
-                    mBottomActionBar.hide();
-                } else {
-                    reloadOptions();
-                }
+                reloadOptions();
             }
         } else if (requestCode == FULL_PREVIEW_REQUEST_CODE && resultCode == RESULT_OK) {
             applyTheme();
@@ -324,7 +324,7 @@ public class ThemeFragment extends AppbarFragment {
                     break;
                 }
             }
-            if (mSelectedTheme == null) {
+            if (mSelectedTheme == null || !options.contains(mSelectedTheme)) {
                 mSelectedTheme = findFirstSystemThemeBundle(options);
             }
             mOptionsController.setSelectedOption(mSelectedTheme);
@@ -336,7 +336,9 @@ public class ThemeFragment extends AppbarFragment {
 
     private ThemeBundle findFirstSystemThemeBundle(List<ThemeBundle> options) {
         for (ThemeBundle bundle : options) {
-            if (!(bundle instanceof CustomTheme)) {
+            String pkg = bundle.getPackagesByCategory().get(OVERLAY_CATEGORY_UISTYLE_ANDROID);
+            String currentPkg = mThemeManager.getCurrentOverlays().get(OVERLAY_CATEGORY_UISTYLE_ANDROID);
+            if (!(bundle instanceof CustomTheme) && pkg.equals(currentPkg)) {
                 return bundle;
             }
         }
